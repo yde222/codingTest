@@ -1,72 +1,58 @@
-import java.util.*;
-
 class Solution {
-public int[] solution(int n, int[] info) {
-
-        int ryanfail = -1;
-        int[] maxInfo = new int[11];
-
-        for (int mask = 0; mask<( 1<< 11); mask++){
-            int[] ryan = new int[11];
-            int usedArrows = 0;
-
-            for (int i = 0; i < 11; i++) {
-                if((mask&(1<<i)) !=0){
-                    ryan[i] = info[i]+1;
-                    usedArrows += ryan[i];
-                }
+    
+    int[] best = {-1};
+    int bestDiff = -1;
+    
+    public int[] solution(int n, int[] info) {
+        dfs(0,n, info, new int[11]);
+        return best;
+    }
+    
+    void dfs(int idx, int arrows, int[] apeach, int[] ryan){
+        if(idx == 11) {
+            ryan[10] += arrows;
+            int diff = scoreDiff(apeach, ryan);
+            
+            if(diff <=0) {
+                ryan[10] -= arrows;
+                return;
             }
-
-            if(usedArrows > n ) continue;
-
-            ryan[10] += (n - usedArrows);
-
-            int scoreDiff = calculateScoDiff(ryan, info);
-
-            if(scoreDiff > 0){
-                if(scoreDiff >ryanfail){
-                    ryanfail = scoreDiff;
-                    maxInfo = ryan.clone();
-                } else if(scoreDiff == ryanfail){
-                    if(isLowwerScorePreferred(ryan,maxInfo)){
-                        maxInfo = ryan.clone();
-                    }
-                }
+            
+            if(diff>bestDiff || (diff == bestDiff && better(ryan,best))){
+                bestDiff = diff;
+                best = ryan.clone();
             }
+            ryan[10] -= arrows;
+            return;
         }
-
-
-        return ryanfail <= 0 ? new int[]{-1} : maxInfo;
-
+        
+        int need= apeach[idx] +1;
+        if(need<= arrows){
+            ryan[idx] = need;
+            dfs(idx+1,arrows-need,apeach,ryan);
+            ryan[idx]=0;
+        }
+        
+        dfs(idx +1, arrows, apeach, ryan);
+    }
+    
+    
+     int scoreDiff(int[] apeach, int[] ryan) {
+        int apeachScore = 0, ryanScore = 0;
+        for (int i = 0; i < 11; i++) {
+            if (apeach[i] == 0 && ryan[i] == 0) continue;
+            if (apeach[i] >= ryan[i]) apeachScore += 10 - i;
+            else ryanScore += 10 - i;
+        }
+        return ryanScore - apeachScore;
     }
 
-    private  int calculateScoDiff(int[] ryan, int[] info){
-        int ryanScore = 0, apeachScore = 0;
-
-        for(int i = 0; i<11; i++){
-            int score = 10-i;
-            if(ryan[i] > info[i]){
-                ryanScore += score;
-            }else if(info[i] >0){
-                apeachScore += score;
-            }
-
-        }
-        return  ryanScore - apeachScore;
-    }
-
-    private boolean isLowwerScorePreferred(int[] ryan, int[] best){
-
-        for(int i=10; i >=0; i--){
-            if(ryan[i] > best[i]){
-                return true;
-            }
-            if(ryan[i] < best[i]){
-                return false;
-            }
+ 
+    boolean better(int[] ryan, int[] best) {
+        for (int i = 10; i >= 0; i--) {
+            if (ryan[i] > best[i]) return true;
+            if (ryan[i] < best[i]) return false;
         }
         return false;
     }
-
-    
 }
